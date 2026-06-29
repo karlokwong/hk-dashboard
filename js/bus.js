@@ -8,10 +8,11 @@
 
 /* ══ PRESET STOPS ═══════════════════════════════════════════ */
 const PRESET_STOPS = [
-  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭總站', route:'41A', serviceType:1, hint:'往旺角/尖沙咀東' },
-  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭總站', route:'44', serviceType:1, hint:'往旺角' },
-  { operator:'KMB', id:'1FEDF7B1A82A432A', label:'青衣碼頭總站', route:'43B', serviceType:1, hint:'往荃灣' },
-  { operator:'KMB', id:'507A1E5DF62D2B4A', label:'天瑞總站',       route:'69X', serviceType:1, hint:'往沙田' },
+  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭', route:'41A', serviceType:1, hint:'往旺角/尖沙咀東' },
+  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭', route:'44', serviceType:1, hint:'往旺角' },
+  { operator:'KMB', id:'1FEDF7B1A82A432A', label:'青衣碼頭', route:'43B', serviceType:1, hint:'往荃灣' },
+  { operator:'KMB', id:'F41714406F2D4E00', label:'青衣碼頭總站',       route:'49X', serviceType:1, hint:'往沙田' },
+  { operator:'KMB', id:'C5074D083891BB43', label:'青衣碼頭總站',       route:'41M', serviceType:1, hint:'往荃灣' },
   { operator:'CTB', id:'001939',           label:'龍門居',         route:'962X', hint:'往銅鑼灣' },
 ];
 
