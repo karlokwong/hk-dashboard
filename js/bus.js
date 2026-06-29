@@ -8,8 +8,8 @@
 
 /* ══ PRESET STOPS ═══════════════════════════════════════════ */
 const PRESET_STOPS = [
-  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭總站', route:'41A', serviceType:1, hint:'往旺角/高鐵' },
-  { operator:'KMB', id:'6129FAE857E1D5F0', label:'兆康苑總站',     route:'67X', serviceType:1, hint:'往旺角' },
+  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭總站', route:'41A', serviceType:1, hint:'往旺角' },
+  { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭總站', route:'44', serviceType:1, hint:'往旺角' },
   { operator:'KMB', id:'45C39BB56C6B333C', label:'大興總站',       route:'66M', serviceType:1, hint:'往元朗' },
   { operator:'KMB', id:'507A1E5DF62D2B4A', label:'天瑞總站',       route:'69X', serviceType:1, hint:'往沙田' },
   { operator:'CTB', id:'001939',           label:'龍門居',         route:'962X', hint:'往銅鑼灣' },
