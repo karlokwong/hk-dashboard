@@ -463,63 +463,71 @@
           <div class="section-hdr-title-en">Bus ETA · KMB / CTB / GMB</div>
         </div>
       </div>
-
-      <!-- ① 路線搜尋 (主功能) -->
-      <div class="card">
-        <div class="card-head">
+      
+<!-- ① 路線搜尋 (主功能) -->
+      <div class="card" id="search-card">
+        <div class="card-head" onclick="toggleSearchBox()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
           <div>
             <div class="card-title">🔍 路線查詢 Route Search</div>
             <div class="card-sub">輸入路線號，自動列出所有站點 → 點擊任何站查看實時到站時間</div>
           </div>
-          <span class="card-badge badge-live">● KMB · CTB</span>
-        </div>
-
-        <!-- Search box -->
-        <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)">
-          <input id="bus-search-input"
-            placeholder="輸入路線號 e.g. 41M、67X、962X、68X…"
-            autocomplete="off" autocorrect="off" autocapitalize="characters"
-            onkeydown="if(event.key==='Enter')BusSearch.search()"
-            style="flex:1;background:var(--surface-2);border:1px solid var(--border);
-                   border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);
-                   color:var(--text);font:inherit;font-size:var(--text-base);
-                   outline:none;transition:border-color .15s"
-            onfocus="this.style.borderColor='var(--primary)'"
-            onblur="this.style.borderColor='var(--border)'">
-          <button onclick="BusSearch.search()"
-            style="background:var(--primary);color:white;border-radius:var(--r-md);
-                   padding:var(--sp-3) var(--sp-5);font-size:var(--text-sm);
-                   font-weight:700;white-space:nowrap;min-width:72px">
-            搜尋
-          </button>
-        </div>
-
-        <!-- Quick route buttons -->
-        <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-4)">
-          <span style="font-size:var(--text-xs);color:var(--text-faint);align-self:center">常用路線：</span>
-          <button onclick="document.getElementById('bus-search-input').value='41A';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">41A</button>
-          <button onclick="document.getElementById('bus-search-input').value='44';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">44</button>
-          <button onclick="document.getElementById('bus-search-input').value='43B';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">43B</button>
-          <button onclick="document.getElementById('bus-search-input').value='49X';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">49X</button>
-          <button onclick="document.getElementById('bus-search-input').value='41M';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">41M</button>
-          <button onclick="document.getElementById('bus-search-input').value='X42C';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">X42C</button>
-          <button onclick="document.getElementById('bus-search-input').value='42C';BusSearch.search()"
-            style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">42C</button>
-        </div>
-
-        <!-- Search result: direction buttons + stop list -->
-        <div id="bus-search-result">
-          <div style="padding:var(--sp-4);text-align:center;color:var(--text-faint);font-size:var(--text-sm)">
-            輸入路線號後按「搜尋」或點選上方常用路線
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="card-badge badge-live">● KMB · CTB</span>
+            <span id="search-toggle-icon" style="font-size: 16px; font-weight: bold; transition: transform 0.2s;">−</span>
           </div>
         </div>
-      </div>
+
+        <!-- Collapsible Wrapper Container -->
+        <div id="search-box-content" style="transition: max-height 0.25s ease-out; overflow: hidden; max-height: 1000px;">
+          <div style="padding-top: var(--sp-4);">
+            <!-- Search box input layout elements -->
+            <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)">
+              <input id="bus-search-input"
+                placeholder="輸入路線號 e.g. 41M、67X、962X、68X…"
+                autocomplete="off" autocorrect="off" autocapitalize="characters"
+                onkeydown="if(event.key==='Enter')BusSearch.search()"
+                style="flex:1;background:var(--surface-2);border:1px solid var(--border);
+                       border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);
+                       color:var(--text);font:inherit;font-size:var(--text-base);
+                       outline:none;transition:border-color .15s"
+                onfocus="this.style.borderColor='var(--primary)'"
+                onblur="this.style.borderColor='var(--border)'">
+              <button onclick="BusSearch.search()"
+                style="background:var(--primary);color:white;border-radius:var(--r-md);
+                       padding:var(--sp-3) var(--sp-5);font-size:var(--text-sm);
+                       font-weight:700;white-space:nowrap;min-width:72px">
+                搜尋
+              </button>
+            </div>
+
+            <!-- Quick route buttons shortcut links -->
+            <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-4)">
+              <span style="font-size:var(--text-xs);color:var(--text-faint);align-self:center">常用路線：</span>
+              <button onclick="document.getElementById('bus-search-input').value='41A';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">41A</button>
+              <button onclick="document.getElementById('bus-search-input').value='44';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">44</button>
+              <button onclick="document.getElementById('bus-search-input').value='43B';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">43B</button>
+              <button onclick="document.getElementById('bus-search-input').value='49X';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">49X</button>
+              <button onclick="document.getElementById('bus-search-input').value='41M';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">41M</button>
+              <button onclick="document.getElementById('bus-search-input').value='X42C';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">X42C</button>
+              <button onclick="document.getElementById('bus-search-input').value='42C';BusSearch.search()"
+                style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:4px 12px;font-size:var(--text-xs);cursor:pointer;color:var(--text)">42C</button>
+            </div>
+
+            <!-- Search result output targets layout panel -->
+            <div id="bus-search-result">
+              <div style="padding:var(--sp-4);text-align:center;color:var(--text-faint);font-size:var(--text-sm)">
+                輸入路線號後按「搜尋」或點選上方常用路線
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>      
 
       <!-- ② ETA 結果面板 (浮動在搜尋結果下) -->
       <div id="bus-eta-panel" class="card" style="display:none;border:2px solid var(--primary);border-radius:var(--r-xl)">
