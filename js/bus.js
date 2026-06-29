@@ -603,3 +603,22 @@ document.addEventListener('click', function(e) {
     return;
   }
 });
+
+/* Version 2 for Expand / Collapse */
+function toggleSearchBox() {
+  const content = document.getElementById('search-box-content');
+  const icon = document.getElementById('search-toggle-icon');
+  
+  if (content.style.maxHeight === '0px') {
+    content.style.maxHeight = '2000px'; // Adequate height margin for loading dynamic route steps safely
+    icon.textContent = '−';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    content.style.maxHeight = '0px';
+    icon.textContent = '+';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+// Make toggle available in global scope window
+window.toggleSearchBox = toggleSearchBox;
