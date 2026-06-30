@@ -111,7 +111,100 @@ async function getCTBRouteInfo(route) {
   } catch { return { orig:'', dest:'' }; }
 }
 
-/* ══ PRESET MODULE ══════════════════════════════════════════ */
+/* ══ PRESET MODULE v2 ══════════════════════════════════════════ */
+const Bus = (function() {
+
+  function renderPresetGrid() {
+    const grid = document.getElementById('bus-presets-grid');
+    if (!grid) return;
+
+    // Group items by label
+    const grouped = {};
+    PRESET_STOPS.forEach((p, i) => {
+      if (!grouped[p.label]) grouped[p.label] = [];
+      grouped[p.label].push({ item: p, originalIndex: i });
+    });
+
+    // Render grouped layout
+    grid.style.display = 'flex';
+    grid.style.flexDirection = 'column';
+    grid.style.gap = 'var(--sp-4)';
+    grid.innerHTML = Object.entries(grouped).map(([label, stops]) => `
+      <div class="preset-group" style="background: var(--surface); padding: var(--sp-3); border-radius: var(--r-xl); border: 1px solid var(--border)">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: var(--sp-3); color: var(--primary); display: flex; align-items: center; gap: 6px;">
+          📍 ${label}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-3);">
+          ${stops.map(({ item: p, originalIndex: i }) => `
+            <div class="card" style="padding: var(--sp-3); background: var(--surface-2); margin: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px">
+                <span class="tag ${p.operator==='KMB'?'tag-red':'tag-green'}"
+                  style="font-size:10px;font-weight:700;flex-shrink:0">${p.operator}</span>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700">${p.route}</div>
+                  <div style="font-size: 10px; color: var(--text-faint)">${p.hint}</div>
+                </div>
+              </div>
+              <div id="preset-eta-${i}">
+                <div class="skel" style="height:24px;border-radius:6px"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadPreset(p, i) {
+    const cont = document.getElementById(`preset-eta-${i}`);
+    if (!cont) return;
+    try {
+      let etas = [];
+      if (p.operator === 'KMB') {
+        const r = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${p.id}/${p.route}/${p.serviceType}`);
+        const d = await r.json();
+        etas = d.data || [];
+      } else {
+        const r = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${p.id}/${p.route}`);
+        const d = await r.json();
+        etas = d.data || [];
+      }
+
+      const byDest = {};
+      etas.forEach(e => {
+        const dest = e.dest_tc || e.dest_en || p.route;
+        if (!byDest[dest]) byDest[dest] = [];
+        if (byDest[dest].length < 3 && (e.eta || e.rmk_tc)) byDest[dest].push(e);
+      });
+
+      if (!Object.keys(byDest).length) {
+        cont.innerHTML = `<div style="color:var(--text-faint);font-size:12px;padding:4px">暫無班次</div>`;
+        return;
+      }
+
+      cont.innerHTML = Object.entries(byDest).map(([dest, arr]) => `
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text-faint);margin-bottom:4px">→ ${dest}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${arr.map(e => fmtEta(e.eta, e.rmk_tc)).join('')}
+          </div>
+        </div>
+      `).join('');
+    } catch {
+      cont.innerHTML = `<div style="color:var(--error);font-size:11px">載入失敗</div>`;
+    }
+  }
+
+  async function refresh() {
+    renderPresetGrid();
+    await Promise.allSettled(PRESET_STOPS.map((p, i) => loadPreset(p, i)));
+  }
+
+  return { refresh };
+})();
+
+
+/* ══ PRESET MODULE ══════════════════════════════════════════ 
 const Bus = (function() {
 
   function renderPresetGrid() {
@@ -182,6 +275,8 @@ const Bus = (function() {
 
   return { refresh };
 })();
+
+/* ══ PRESET MODULE ══════════════════════════════════════════ */
 
 /* ══ SEARCH MODULE ══════════════════════════════════════════ */
 const BusSearch = (function() {
