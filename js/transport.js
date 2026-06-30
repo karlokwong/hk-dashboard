@@ -13,18 +13,42 @@ const DIR_LABEL = { UP: '上行', DOWN: '下行', UT: '上行', DT: '下行' };
 
 /* ── MTR station code → Chinese name NEED FIX TST TSY────────────────────────── */
 const STA_NAMES = {
-  TUM:'屯門', WKS:'烏溪沙', SHT:'沙田', MKK:'旺角東', LOW:'羅湖', SHS:'上水',
-  TAW:'大圍', OTP:'大埔墟', TIS:'天水圍', KSR:'錦上路', YUL:'元朗', LOP:'朗屏',
-  HUH:'何文田', ETS:'屯門東', AUS:'尾竜山', QUB:'奧運',
-  ADM:'金鐘', CEN:'中環', SHW:'上環', HKU:'香港大學', KET:'堅尼地城',
-  KWN:'筲箕灣', TWO:'荔枝角', OCP:'海洋公園', BIH:'博覽館', HOK:'香港',
-  KOT:'觀塘', LAT:'藍田', WTS:'黃大仙', DIH:'鑽石山',
-  FOT:'火炭', CKT:'彩虹', TKO:'將軍澳', LHP:'日出康城', HAH:'坑口', TIK:'天后',
-  SWH:'石塘咀', CHW:'柴灣', TST:'尖沙咀', AWE:'博覽館',
-  TUC:'東涌', LAK:'荔景', TSW:'荃灣', KWH:'葵興', DEP:'葵芳', NAN:'南昌', LCK:'荔枝角',
-  WCH:'黃竹坑', NAC:'南昌', SKW:'石硤尾', SHS:'上水', STK:'大學', TSY:'青衣',
-  DIH:'鑽石山', MOS:'馬鞍山', HIK:'恆安', CIO:'石圍角', DIK:'第一城', STW:'石田',
-  HOM:'紅磡', EXH:'旺角東'
+  // 屯馬綫 (TML)
+  TUM: '屯門',   SIH: '兆康',   TIS: '天水圍', LOP: '朗屏',   YUL: '元朗',
+  KSR: '錦上路', TWW: '荃灣西', MEF: '美孚',   NAC: '南昌',   AUS: '柯士甸',
+  ETS: '尖東',   HUH: '紅磡',   HOM: '何文田', TKW: '土瓜灣', SUW: '宋皇臺',
+  KAT: '啟德',   DIH: '鑽石山', HIK: '顯徑',   TAW: '大圍',   SHM: '車公廟',
+  STW: '沙田圍', CIO: '第一城', SHI: '石門',   TSH: '大水坑', MOS: '馬鞍山',
+  HEO: '恆安',   WKS: '烏溪沙',
+
+  // 東鐵綫 (EAL)
+  ADM: '金鐘',   EXC: '會展',   MKK: '旺角東', KOT: '九龍塘', SHT: '沙田',
+  FOT: '火炭',   RAC: '馬場',   UNI: '大學',   TAP: '大埔墟', TWO: '太和',
+  FAN: '粉嶺',   SHS: '上水',   LOW: '羅湖',   LMC: '落馬洲',
+
+  // 觀塘綫 (KTL)
+  WHP: '黃埔',   YMT: '油麻地', MOK: '旺角',   PRC: '太子',   SKM: '石硤尾',
+  WTS: '黃大仙', CHO: '彩虹',   KOW: '九龍灣', NTK: '牛頭角', KWT: '觀塘',
+  LAT: '藍田',   YAT: '油塘',   TIK: '調景嶺',
+
+  // 荃灣綫 (TWL)
+  CEN: '中環',   TST: '尖沙咀', JOR: '佐敦',   SSP: '深水埗', CSW: '長沙灣',
+  LCK: '荔枝角', KWF: '葵芳',   KWH: '葵興',   TWH: '大窩口', TSW: '荃灣',
+
+  // 港島綫 (ISL)
+  KET: '堅尼地城', HKU: '香港大學', SYP: '西營盤', SHW: '上環', WAC: '灣仔',
+  CAB: '銅鑼灣', TIH: '天后',   FOH: '炮台山', NOP: '北角',   QUB: '鰂魚涌',
+  TAK: '太古',   SWH: '西灣河', SKW: '筲箕灣', CHW: '柴灣',
+
+  // 東涌綫 & 機場快綫 (TCL / AEL)
+  HOK: '香港',   OLY: '奧運',   TSY: '青衣',   SUN: '欣澳',   TUC: '東涌',
+  AIR: '機場',   AWE: '博覽館',
+
+  // 將軍澳綫 (TKL)
+  TKO: '將軍澳', HAH: '坑口',   POA: '寶琳',   LHP: '日出康城',
+
+  // 南港島綫 (SIL)
+  OCP: '海洋公園', WCH: '黃竹坑', LET: '利東',   SOH: '海怡半島'
 };
 
 function staName(code) {
