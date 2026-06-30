@@ -11,7 +11,7 @@ const LRT_API  = 'https://rt.data.gov.hk/v1/transport/mtr/lrt/getSchedule';
 /* ── Direction label map ─────────────────────────────────────── */
 const DIR_LABEL = { UP: '上行', DOWN: '下行', UT: '上行', DT: '下行' };
 
-/* ── MTR station code → Chinese name ────────────────────────── */
+/* ── MTR station code → Chinese name NEED FIX TST TSY────────────────────────── */
 const STA_NAMES = {
   TUM:'屯門', WKS:'烏溪沙', SHT:'沙田', MKK:'旺角東', LOW:'羅湖', SHS:'上水',
   TAW:'大圍', OTP:'大埔墟', TIS:'天水圍', KSR:'錦上路', YUL:'元朗', LOP:'朗屏',
@@ -20,9 +20,9 @@ const STA_NAMES = {
   KWN:'筲箕灣', TWO:'荔枝角', OCP:'海洋公園', BIH:'博覽館', HOK:'香港',
   KOT:'觀塘', LAT:'藍田', WTS:'黃大仙', DIH:'鑽石山',
   FOT:'火炭', CKT:'彩虹', TKO:'將軍澳', LHP:'日出康城', HAH:'坑口', TIK:'天后',
-  SWH:'石塘咀', CHW:'柴灣', TSY:'尖沙咀', AWE:'博覽館',
+  SWH:'石塘咀', CHW:'柴灣', TST:'尖沙咀', AWE:'博覽館',
   TUC:'東涌', LAK:'荔景', TSW:'荃灣', KWH:'葵興', DEP:'葵芳', NAN:'南昌', LCK:'荔枝角',
-  WCH:'黃竹坑', NAC:'南昌', SKW:'石硤尾', SHS:'上水', STK:'大學', TCW:'青衣',
+  WCH:'黃竹坑', NAC:'南昌', SKW:'石硤尾', SHS:'上水', STK:'大學', TSY:'青衣',
   DIH:'鑽石山', MOS:'馬鞍山', HIK:'恆安', CIO:'石圍角', DIK:'第一城', STW:'石田',
   HOM:'紅磡', EXH:'旺角東'
 };
