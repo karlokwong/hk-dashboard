@@ -90,8 +90,8 @@ async function fetchMTR(line, sta, targetId, subtitleId) {
 /* ── Default MTR (home + transport page) ─────────────────────── */
 async function fetchDefaultMTR() {
   await Promise.all([
-    fetchMTR('TML', 'TUM', 't-mtr'),
-    fetchMTR('TML', 'TUM', 'h-mtr-content')
+    fetchMTR('TCL', 'TCW', 't-mtr'),
+    fetchMTR('TCL', 'TCW', 'h-mtr-content')
   ]);
 }
 
