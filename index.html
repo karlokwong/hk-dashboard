@@ -463,8 +463,8 @@
           <div class="section-hdr-title-en">Bus ETA · KMB / CTB / GMB</div>
         </div>
       </div>
-      
-<!-- ① 路線搜尋 (主功能) v2 -->
+
+      <!-- ① 路線搜尋 (主功能) v2 -->
       <div class="card" id="search-card">
         <div class="card-head" onclick="toggleSearchBox()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
           <div>
@@ -473,12 +473,13 @@
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="card-badge badge-live">● KMB · CTB</span>
-            <span id="search-toggle-icon" style="font-size: 16px; font-weight: bold; transition: transform 0.2s;">−</span>
+            <!-- Changed default icon to '+' and set initial rotation to 180deg to sync with the toggle function -->
+            <span id="search-toggle-icon" style="font-size: 16px; font-weight: bold; transition: transform 0.2s; transform: rotate(180deg);">+</span >
           </div>
         </div>
 
-        <!-- Collapsible Wrapper Container -->
-        <div id="search-box-content" style="transition: max-height 0.25s ease-out; overflow: hidden; max-height: 1000px;">
+        <!-- Collapsible Wrapper Container (Changed max-height to 0px for default collapsed state) -->
+        <div id="search-box-content" style="transition: max-height 0.25s ease-out; overflow: hidden; max-height: 0px;">
           <div style="padding-top: var(--sp-4);">
             <!-- Search box input layout elements -->
             <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)">
@@ -527,8 +528,8 @@
             </div>
           </div>
         </div>
-      </div>      
-
+      </div>
+      
       <!-- ② ETA 結果面板 (浮動在搜尋結果下) -->
       <div id="bus-eta-panel" class="card" style="display:none;border:2px solid var(--primary);border-radius:var(--r-xl)">
       </div>
