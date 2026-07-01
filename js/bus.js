@@ -210,91 +210,95 @@ const BusSearch = (function() {
   let _activeIdx = 0;
 
   /* ── Main search ─────────────────────────────────────── */
-  async function search() {
-    const input = (document.getElementById('bus-search-input')?.value || '').trim().toUpperCase();
+async function search() {
+    const input = document.getElementById('bus-search-input').value.trim().toUpperCase();
     if (!input) return;
 
-    const resultEl = document.getElementById('bus-search-result');
-    const etaEl    = document.getElementById('bus-eta-panel');
-    if (!resultEl) return;
-    if (etaEl) { etaEl.style.display = 'none'; etaEl.innerHTML = ''; }
+    const resCont = document.getElementById('bus-search-result');
+    if (!resCont) return;
 
-    // Loading state
-    resultEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;padding:20px;color:var(--text-muted)">
-        <div class="bus-spin"></div>
-        <span>搜尋路線 <strong>${input}</strong> 中…</span>
-      </div>
-    `;
+    resCont.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
 
-    // Fetch route info + stops in parallel
-    const [kmbInfo, ctbInfo, kmbOut, kmbIn, ctbOut, ctbIn] = await Promise.allSettled([
-      getKMBRouteInfo(input),
-      getCTBRouteInfo(input),
-      fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/outbound/1`).then(r=>r.json()),
-      fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/inbound/1`).then(r=>r.json()),
-      fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${input}/outbound`).then(r=>r.json()),
-      fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${input}/inbound`).then(r=>r.json()),
-    ]);
+    try {
+      // 1. Fetch data from both operators in parallel
+      const [kmbRouteRes, ctbRouteRes] = await Promise.allSettled([
+        fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${input}/outbound/1`).then(r => r.json()),
+        fetch(`https://rt.data.gov.hk/v2/transport/citybus/route/CTB/${input}`).then(r => r.json())
+      ]);
 
-    const kmbRoute = kmbInfo.status==='fulfilled' ? kmbInfo.value : {orig:'',dest:''};
-    const ctbRoute = ctbInfo.status==='fulfilled' ? ctbInfo.value : {orig:'',dest:''};
-
-/* ── Main search (Updated Validation Section) ─Filter out Inbound for Terminal ────────────────── */
-    _results = [];
-    
-    // 1. KMB Outbound (Always allowed if stops exist)
-    if (kmbOut.status==='fulfilled' && (kmbOut.value.data||[]).length) {
-      _results.push({ operator:'KMB', route:input, direction:'outbound',
-        orig: kmbRoute.orig, dest: kmbRoute.dest, stops: kmbOut.value.data });
-    }
-    
-    // 2. KMB Inbound (Check if this terminal stop acts as Seq 1 of Outbound)
-    if (kmbIn.status==='fulfilled' && (kmbIn.value.data||[]).length) {
-      const kmbStops = kmbIn.value.data;
-      // Find if the queried stop is the first stop (seq === 1) on the outbound track
-      const isOriginTerminal = kmbOut.status==='fulfilled' && (kmbOut.value.data||[]).some(s => s.seq === 1);
-      
-      // If it's the origin terminal (seq === 1), do NOT push the inbound schedule
-      if (!isOriginTerminal) {
-        _results.push({ operator:'KMB', route:input, direction:'inbound',
-          orig: kmbRoute.dest, dest: kmbRoute.orig, stops: kmbStops });
+      let kmbRoute = null;
+      if (kmbRouteRes.status === 'fulfilled' && kmbRouteRes.value.data) {
+        kmbRoute = kmbRouteRes.value.data;
       }
-    }
-    
-    // 3. CTB Outbound (Always allowed if stops exist)
-    if (ctbOut.status==='fulfilled' && (ctbOut.value.data||[]).length) {
-      _results.push({ operator:'CTB', route:input, direction:'outbound',
-        orig: ctbRoute.orig, dest: ctbRoute.dest, stops: ctbOut.value.data });
-    }
-    
-    // 4. CTB Inbound (Check if this terminal stop acts as Seq 1 of Outbound)
-    if (ctbIn.status==='fulfilled' && (ctbIn.value.data||[]).length) {
-      const ctbStops = ctbIn.value.data;
-      // Find if the queried stop is the first stop (seq === 1) on the outbound track
-      const isOriginTerminal = ctbOut.status==='fulfilled' && (ctbOut.value.data||[]).some(s => s.seq === 1);
-      
-      // If it's the origin terminal (seq === 1), do NOT push the inbound schedule
-      if (!isOriginTerminal) {
-        _results.push({ operator:'CTB', route:input, direction:'inbound',
-          orig: ctbRoute.dest, dest: ctbRoute.orig, stops: ctbStops });
+      let ctbRoute = null;
+      if (ctbRouteRes.status === 'fulfilled' && ctbRouteRes.value.data && ctbRouteRes.value.data.length) {
+        // Find standard variant if multiple exist
+        ctbRoute = ctbRouteRes.value.data.find(r => r.service_type === '1') || ctbRouteRes.value.data[0];
       }
-    }
 
-    if (!_results.length) {
-      resultEl.innerHTML = `
-        <div style="padding:40px 20px;text-align:center;color:var(--text-faint)">
-          <div style="font-size:36px;margin-bottom:12px">🚌</div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px">找不到路線 ${input}</div>
-          <div style="font-size:12px">請確認路線號是否正確，例如 60X、67X、962X</div>
-        </div>
-      `;
-      return;
-    }
+      // 2. Fetch all possible direction stop arrays simultaneously
+      const [kmbOut, kmbIn, ctbOut, ctbIn] = await Promise.allSettled([
+        fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/outbound/1`).then(r => r.json()),
+        fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/inbound/1`).then(r => r.json()),
+        fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${input}/outbound`).then(r => r.json()),
+        fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${input}/inbound`).then(r => r.json())
+      ]);
 
-    _activeIdx = 0;
-    renderDirectionTabs();
-    renderStopList(_activeIdx);
+      _results = [];
+
+      // 3. Process KMB Results
+      let isKmbTerminalStop = false;
+      if (kmbOut.status === 'fulfilled' && (kmbOut.value.data || []).length && kmbRoute) {
+        _results.push({
+          operator: 'KMB', route: input, direction: 'outbound',
+          orig: kmbRoute.orig_tc, dest: kmbRoute.dest_tc, stops: kmbOut.value.data
+        });
+        
+        // Check if the current environment represents the absolute starting sequence
+        isKmbTerminalStop = kmbOut.value.data.some(s => s.seq === 1);
+      }
+
+      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq === 1)
+      if (kmbIn.status === 'fulfilled' && (kmbIn.value.data || []).length && kmbRoute && !isKmbTerminalStop) {
+        _results.push({
+          operator: 'KMB', route: input, direction: 'inbound',
+          orig: kmbRoute.dest_tc, dest: kmbRoute.orig_tc, stops: kmbIn.value.data
+        });
+      }
+
+      // 4. Process Citybus (CTB) Results
+      let isCtbTerminalStop = false;
+      if (ctbOut.status === 'fulfilled' && (ctbOut.value.data || []).length && ctbRoute) {
+        _results.push({
+          operator: 'CTB', route: input, direction: 'outbound',
+          orig: ctbRoute.orig_tc, dest: ctbRoute.dest_tc, stops: ctbOut.value.data
+        });
+
+        isCtbTerminalStop = ctbOut.value.data.some(s => s.seq === 1);
+      }
+
+      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq === 1)
+      if (ctbIn.status === 'fulfilled' && (ctbIn.value.data || []).length && ctbRoute && !isCtbTerminalStop) {
+        _results.push({
+          operator: 'CTB', route: input, direction: 'inbound',
+          orig: ctbRoute.dest_tc, dest: ctbRoute.orig_tc, stops: ctbIn.value.data
+        });
+      }
+
+      if (!_results.length) {
+        resCont.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-faint)">找不到路線 ${input}</div>`;
+        return;
+      }
+
+      // 5. Render active direction tab options
+      _activeIdx = 0;
+      renderDirectionTabs();
+      renderStopSequence();
+
+    } catch (err) {
+      console.error(err);
+      resCont.innerHTML = `<div style="padding:20px;text-align:center;color:var(--error)">搜尋出錯: ${err.message}</div>`;
+    }
   }
 
   /* ── Direction tabs with real origin→dest ───────────── */
