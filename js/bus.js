@@ -240,19 +240,46 @@ const BusSearch = (function() {
     const kmbRoute = kmbInfo.status==='fulfilled' ? kmbInfo.value : {orig:'',dest:''};
     const ctbRoute = ctbInfo.status==='fulfilled' ? ctbInfo.value : {orig:'',dest:''};
 
+/* ── Main search (Updated Validation Section) ─Filter out Inbound for Terminal ────────────────── */
     _results = [];
-    if (kmbOut.status==='fulfilled' && (kmbOut.value.data||[]).length)
+    
+    // 1. KMB Outbound (Always allowed if stops exist)
+    if (kmbOut.status==='fulfilled' && (kmbOut.value.data||[]).length) {
       _results.push({ operator:'KMB', route:input, direction:'outbound',
         orig: kmbRoute.orig, dest: kmbRoute.dest, stops: kmbOut.value.data });
-    if (kmbIn.status==='fulfilled' && (kmbIn.value.data||[]).length)
-      _results.push({ operator:'KMB', route:input, direction:'inbound',
-        orig: kmbRoute.dest, dest: kmbRoute.orig, stops: kmbIn.value.data });
-    if (ctbOut.status==='fulfilled' && (ctbOut.value.data||[]).length)
+    }
+    
+    // 2. KMB Inbound (Check if this terminal stop acts as Seq 1 of Outbound)
+    if (kmbIn.status==='fulfilled' && (kmbIn.value.data||[]).length) {
+      const kmbStops = kmbIn.value.data;
+      // Find if the queried stop is the first stop (seq === 1) on the outbound track
+      const isOriginTerminal = kmbOut.status==='fulfilled' && (kmbOut.value.data||[]).some(s => s.seq === 1);
+      
+      // If it's the origin terminal (seq === 1), do NOT push the inbound schedule
+      if (!isOriginTerminal) {
+        _results.push({ operator:'KMB', route:input, direction:'inbound',
+          orig: kmbRoute.dest, dest: kmbRoute.orig, stops: kmbStops });
+      }
+    }
+    
+    // 3. CTB Outbound (Always allowed if stops exist)
+    if (ctbOut.status==='fulfilled' && (ctbOut.value.data||[]).length) {
       _results.push({ operator:'CTB', route:input, direction:'outbound',
         orig: ctbRoute.orig, dest: ctbRoute.dest, stops: ctbOut.value.data });
-    if (ctbIn.status==='fulfilled' && (ctbIn.value.data||[]).length)
-      _results.push({ operator:'CTB', route:input, direction:'inbound',
-        orig: ctbRoute.dest, dest: ctbRoute.orig, stops: ctbIn.value.data });
+    }
+    
+    // 4. CTB Inbound (Check if this terminal stop acts as Seq 1 of Outbound)
+    if (ctbIn.status==='fulfilled' && (ctbIn.value.data||[]).length) {
+      const ctbStops = ctbIn.value.data;
+      // Find if the queried stop is the first stop (seq === 1) on the outbound track
+      const isOriginTerminal = ctbOut.status==='fulfilled' && (ctbOut.value.data||[]).some(s => s.seq === 1);
+      
+      // If it's the origin terminal (seq === 1), do NOT push the inbound schedule
+      if (!isOriginTerminal) {
+        _results.push({ operator:'CTB', route:input, direction:'inbound',
+          orig: ctbRoute.dest, dest: ctbRoute.orig, stops: ctbStops });
+      }
+    }
 
     if (!_results.length) {
       resultEl.innerHTML = `
