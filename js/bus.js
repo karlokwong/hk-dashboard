@@ -232,7 +232,6 @@ async function search() {
       }
       let ctbRoute = null;
       if (ctbRouteRes.status === 'fulfilled' && ctbRouteRes.value.data && ctbRouteRes.value.data.length) {
-        // Find standard variant if multiple exist
         ctbRoute = ctbRouteRes.value.data.find(r => r.service_type === '1') || ctbRouteRes.value.data[0];
       }
 
@@ -254,11 +253,11 @@ async function search() {
           orig: kmbRoute.orig_tc, dest: kmbRoute.dest_tc, stops: kmbOut.value.data
         });
         
-        // Check if the current environment represents the absolute starting sequence
-        isKmbTerminalStop = kmbOut.value.data.some(s => s.seq === 1);
+        // Safe Type Check: parse seq to integer to avoid strict comparison mismatches
+        isKmbTerminalStop = kmbOut.value.data.some(s => parseInt(s.seq, 10) === 1);
       }
 
-      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq === 1)
+      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq == 1)
       if (kmbIn.status === 'fulfilled' && (kmbIn.value.data || []).length && kmbRoute && !isKmbTerminalStop) {
         _results.push({
           operator: 'KMB', route: input, direction: 'inbound',
@@ -274,10 +273,11 @@ async function search() {
           orig: ctbRoute.orig_tc, dest: ctbRoute.dest_tc, stops: ctbOut.value.data
         });
 
-        isCtbTerminalStop = ctbOut.value.data.some(s => s.seq === 1);
+        // Safe Type Check: handles Citybus returning seq as a "string" format
+        isCtbTerminalStop = ctbOut.value.data.some(s => parseInt(s.seq, 10) === 1);
       }
 
-      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq === 1)
+      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq == 1)
       if (ctbIn.status === 'fulfilled' && (ctbIn.value.data || []).length && ctbRoute && !isCtbTerminalStop) {
         _results.push({
           operator: 'CTB', route: input, direction: 'inbound',
