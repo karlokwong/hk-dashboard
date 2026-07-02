@@ -196,6 +196,21 @@
         </div>
       </div>
 
+    <!-- 常用站點 Mini Card (完全替換 AQHI) -->
+      <div class="card clickable" onclick="switchTab('bus-tab')" style="cursor: pointer;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-2);">
+          <h3 style="margin: 0; font-size: var(--text-sm); display: flex; align-items: center; gap: 4px;">
+            ⭐ 常用站點 Preset Stops
+          </h3>
+          <span id="mini-bus-sync" style="font-size: 10px; color: var(--text-faint);">--:--</span>
+        </div>
+  
+        <!-- 迷你快訊動態容器 -->
+        <div id="mini-preset-bus-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto;">
+          <div class="loading-spinner" style="margin: 10px auto;"></div>
+        </div>
+      </div>
+      
       <!-- MTR mini -->
       <div class="card" style="grid-column:span 2">
         <div class="card-head">
