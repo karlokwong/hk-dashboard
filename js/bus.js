@@ -11,8 +11,8 @@ const PRESET_STOPS = [
   { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭', route:'41A', serviceType:1, hint:'往旺角/尖沙咀東' },
   { operator:'KMB', id:'61D7306AC40C4FB8', label:'青衣碼頭', route:'44', serviceType:1, hint:'往旺角' },
   { operator:'KMB', id:'1FEDF7B1A82A432A', label:'青衣碼頭', route:'43B', serviceType:1, hint:'往荃灣' },
-  { operator:'KMB', id:'F41714406F2D4E00', label:'青衣碼頭總站',       route:'49X', serviceType:1, hint:'往沙田' },
-  { operator:'KMB', id:'C5074D083891BB43', label:'青衣碼頭總站',       route:'41M', serviceType:1, hint:'往荃灣' },
+  { operator:'KMB', id:'F41714406F2D4E00', label:'青衣碼頭總站',       route:'49X', serviceType:1, dir: 'O',hint:'往沙田' },
+  { operator:'KMB', id:'C5074D083891BB43', label:'青衣碼頭總站',       route:'41M', serviceType:1, dir: 'O',hint:'往荃灣' },
   { operator:'CTB', id:'001939',           label:'龍門居',         route:'962X', hint:'往銅鑼灣' },
 ];
 
@@ -172,6 +172,10 @@ const Bus = (function() {
 
       const byDest = {};
       etas.forEach(e => {
+        // ⭐ FIX: If the preset defines a direction (like 'O' for outbound), 
+        // skip any incoming inbound results ('I') at this terminal stop.
+        if (p.dir && e.dir !== p.dir) return;
+
         const dest = e.dest_tc || e.dest_en || p.route;
         if (!byDest[dest]) byDest[dest] = [];
         if (byDest[dest].length < 3 && (e.eta || e.rmk_tc)) byDest[dest].push(e);
@@ -190,11 +194,11 @@ const Bus = (function() {
           </div>
         </div>
       `).join('');
-    } catch {
+    } catch (err) {
       cont.innerHTML = `<div style="color:var(--error);font-size:11px">載入失敗</div>`;
     }
   }
-
+     
   async function refresh() {
     renderPresetGrid();
     await Promise.allSettled(PRESET_STOPS.map((p, i) => loadPreset(p, i)));
@@ -220,7 +224,7 @@ async function search() {
     resCont.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
 
     try {
-      // 1. Fetch data from both operators in parallel
+      // 1. Fetch route definitions
       const [kmbRouteRes, ctbRouteRes] = await Promise.allSettled([
         fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${input}/outbound/1`).then(r => r.json()),
         fetch(`https://rt.data.gov.hk/v2/transport/citybus/route/CTB/${input}`).then(r => r.json())
@@ -235,7 +239,7 @@ async function search() {
         ctbRoute = ctbRouteRes.value.data.find(r => r.service_type === '1') || ctbRouteRes.value.data[0];
       }
 
-      // 2. Fetch all possible direction stop arrays simultaneously
+      // 2. Fetch stops for all directions
       const [kmbOut, kmbIn, ctbOut, ctbIn] = await Promise.allSettled([
         fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/outbound/1`).then(r => r.json()),
         fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${input}/inbound/1`).then(r => r.json()),
@@ -245,40 +249,27 @@ async function search() {
 
       _results = [];
 
-      // 3. Process KMB Results
-      let isKmbTerminalStop = false;
+      // 3. Combine valid results
       if (kmbOut.status === 'fulfilled' && (kmbOut.value.data || []).length && kmbRoute) {
         _results.push({
           operator: 'KMB', route: input, direction: 'outbound',
           orig: kmbRoute.orig_tc, dest: kmbRoute.dest_tc, stops: kmbOut.value.data
         });
-        
-        // Safe Type Check: parse seq to integer to avoid strict comparison mismatches
-        isKmbTerminalStop = kmbOut.value.data.some(s => parseInt(s.seq, 10) === 1);
       }
-
-      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq == 1)
-      if (kmbIn.status === 'fulfilled' && (kmbIn.value.data || []).length && kmbRoute && !isKmbTerminalStop) {
+      if (kmbIn.status === 'fulfilled' && (kmbIn.value.data || []).length && kmbRoute) {
         _results.push({
           operator: 'KMB', route: input, direction: 'inbound',
           orig: kmbRoute.dest_tc, dest: kmbRoute.orig_tc, stops: kmbIn.value.data
         });
       }
 
-      // 4. Process Citybus (CTB) Results
-      let isCtbTerminalStop = false;
       if (ctbOut.status === 'fulfilled' && (ctbOut.value.data || []).length && ctbRoute) {
         _results.push({
           operator: 'CTB', route: input, direction: 'outbound',
           orig: ctbRoute.orig_tc, dest: ctbRoute.dest_tc, stops: ctbOut.value.data
         });
-
-        // Safe Type Check: handles Citybus returning seq as a "string" format
-        isCtbTerminalStop = ctbOut.value.data.some(s => parseInt(s.seq, 10) === 1);
       }
-
-      // ONLY push Inbound if we are NOT currently rendering from the originating Terminal (seq == 1)
-      if (ctbIn.status === 'fulfilled' && (ctbIn.value.data || []).length && ctbRoute && !isCtbTerminalStop) {
+      if (ctbIn.status === 'fulfilled' && (ctbIn.value.data || []).length && ctbRoute) {
         _results.push({
           operator: 'CTB', route: input, direction: 'inbound',
           orig: ctbRoute.dest_tc, dest: ctbRoute.orig_tc, stops: ctbIn.value.data
@@ -290,7 +281,6 @@ async function search() {
         return;
       }
 
-      // 5. Render active direction tab options
       _activeIdx = 0;
       renderDirectionTabs();
       renderStopSequence();
@@ -300,7 +290,6 @@ async function search() {
       resCont.innerHTML = `<div style="padding:20px;text-align:center;color:var(--error)">搜尋出錯: ${err.message}</div>`;
     }
   }
-
   /* ── Direction tabs with real origin→dest ───────────── */
   function renderDirectionTabs() {
     const resultEl = document.getElementById('bus-search-result');
