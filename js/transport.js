@@ -196,7 +196,7 @@ const MTR_STATUS_LINES = [
   { line: 'EAL', sta: 'FOT', label: '東鐵線' },
   { line: 'KTL', sta: 'KOT', label: '觀塘線' },
   { line: 'TWL', sta: 'TSW', label: '荃灣線' },
-  { line: 'ISL', sta: 'KWN', label: '港島線' },
+  { line: 'ISL', sta: 'SKW', label: '港島線' },
   { line: 'SIL', sta: 'OCP', label: '南港島線' },
 ];
 
