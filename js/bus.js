@@ -663,7 +663,7 @@ function toggleSearchBox() {
 // Make toggle available in global scope window
 window.toggleSearchBox = toggleSearchBox;
 
-/**
+/** 
  * 完美複製常用站點分頁的 6 條精確路線至首頁 Mini Card
  */
 async function renderMiniBusPreset() {
@@ -671,112 +671,104 @@ async function renderMiniBusPreset() {
   const syncTime = document.getElementById('mini-bus-sync');
   if (!container) return;
 
-  // 定義與巴士分頁完全一致的 3 個精確站點與路線配置
+  // 1. 嚴格對齊 bus_2.js 頂部 PRESET_STOPS 的真實站點與路線對應關係
   const PRESET_CONFIGS = [
-    {
-      groupName: '📍 青衣碼頭',
-      type: 'KMB',
-      stopId: '61D7306AC40C4FB8', // 青衣碼頭路邊站
-      routes: ['41A', '44', '43B'],
-      dir: 'O'
-    },
-    {
-      groupName: '📍 青衣碼頭總站',
-      type: 'KMB',
-      stopId: 'A75F164C8FA7D095', // 青衣碼頭總站
-      routes: ['49X', '41M'],
-      dir: 'O'
-    },
-    {
-      groupName: '📍 龍門居',
-      type: 'CTB',
-      stopId: '002773', // 龍門居總站城巴 ID
-      routes: ['962X'],
-      dir: 'O'
-    }
+    { groupName: '📍 青衣碼頭', type: 'KMB', stopId: '61D7306AC40C4FB8', routes: ['41A', '44'] },
+    { groupName: '📍 青衣碼頭', type: 'KMB', stopId: '1FEDF7B1A82A432A', routes: ['43B'] },
+    { groupName: '📍 青衣碼頭總站', type: 'KMB', stopId: 'F41714406F2D4E00', routes: ['49X'] },
+    { groupName: '📍 青衣碼頭總站', type: 'KMB', stopId: 'C5074D083891BB43', routes: ['41M'] },
+    { groupName: '📍 龍門居', type: 'CTB', stopId: '001939', routes: ['962X'] }
   ];
 
   try {
-    // 併發請求所有站點的 API
+    // 2. 併發請求所有站點的官方 API
     const fetchPromises = PRESET_CONFIGS.map(async (config) => {
       try {
         let url = '';
         if (config.type === 'KMB') {
           url = `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${config.stopId}`;
         } else {
-          url = `https://rt.hkbus.com.hk/v1/transport/citybus/eta/CTB/${config.stopId}/${config.routes[0]}`;
+          // 修正為 bus_2.js 使用的官方 Data.gov.hk 接口
+          url = `https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${config.stopId}/${config.routes[0]}`;
         }
 
         const res = await fetch(url);
         if (!res.ok) return { ...config, data: [] };
         const json = await res.json();
-        
-        // 城巴與九巴的資料結構標準化
-        let rawData = json.data || [];
-        if (config.type === 'CTB') {
-          // 如果是城巴，因為單一 API 只查一條線，直接保留
-          rawData = json.data || [];
-        }
-
-        return { ...config, data: rawData };
+        return { ...config, data: json.data || [] };
       } catch (e) {
         return { ...config, data: [] };
       }
     });
 
     const results = await Promise.all(fetchPromises);
-    let finalHtml = '';
+    
+    // 3. 建立一個 Map 來將相同 groupName 的路線整合在一起，避免 HTML 標題重複輸出
+    const groupedHtmlMap = {};
 
-    // 開始逐個站點渲染 Mini 區塊
     results.forEach(group => {
-      let routeHtmls = [];
+      if (!groupedHtmlMap[group.groupName]) {
+        groupedHtmlMap[group.groupName] = [];
+      }
 
       group.routes.forEach(routeNum => {
         let matchedEta = null;
 
         if (group.type === 'KMB') {
-          // 篩選出九巴對應路線的最快一班車
-          matchedEta = group.data.find(item => item.route === routeNum && item.eta);
+          // 放寬條件：只要路線對得上就好，就算暫時沒有實時 eta（只有備註）也能抓到資料
+          matchedEta = group.data.find(item => item.route === routeNum);
         } else {
-          // 篩選出城巴對應路線最快一班車
-          matchedEta = group.data.find(item => item.eta);
+          matchedEta = group.data[0]; // 城巴單一請求，直接取第一筆
         }
 
         let timeStr = '暫無班次';
         let tagClass = 'tag-muted';
 
-        if (matchedEta && matchedEta.eta) {
-          const diffMins = Math.max(0, Math.round((new Date(matchedEta.eta) - new Date()) / 60000));
-          timeStr = `${diffMins} 分鐘`;
-          tagClass = diffMins <= 3 ? 'tag-green' : diffMins <= 7 ? 'tag-yellow' : 'tag-blue';
+        if (matchedEta) {
+          if (matchedEta.eta) {
+            const diffMins = Math.round((new Date(matchedEta.eta) - new Date()) / 60000);
+            if (diffMins <= 0) {
+              timeStr = '即將抵達';
+              tagClass = 'tag-red';
+            } else {
+              timeStr = `${diffMins} 分鐘`;
+              tagClass = diffMins <= 3 ? 'tag-yellow' : 'tag-green';
+            }
+          } else if (matchedEta.rmk_tc) {
+            // 如果沒有即時時間，則顯示政府 API 提供的備註（如：預定班次）
+            timeStr = matchedEta.rmk_tc;
+          }
         }
 
-        // 取得目的地中文敘述
+        // 取得目的地中文敘述 (精準對齊 bus_2.js 提示)
         let destText = '';
-        if (routeNum === '41A') destText = '往尖沙咀東';
-        else if (routeNum === '44') destText = '往旺角東';
-        else if (routeNum === '43B') destText = '往荃灣西站';
+        if (routeNum === '41A') destText = '往旺角/尖沙咀東';
+        else if (routeNum === '44') destText = '往旺角';
+        else if (routeNum === '43B') destText = '往荃灣';
         else if (routeNum === '49X') destText = '往沙田';
-        else if (routeNum === '41M') destText = '往荃灣站';
+        else if (routeNum === '41M') destText = '往荃灣';
         else if (routeNum === '962X') destText = '往銅鑼灣';
 
-        routeHtmls.push(`
-          <div class="row-item" style="padding: 2px 0; justify-content: space-between; font-size: 12px;">
+        groupedHtmlMap[group.groupName].push(`
+          <div class="row-item" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px;">
             <span style="font-weight: 600; display: flex; align-items: center; gap: 6px;">
-              <span class="tag ${group.type === 'KMB' ? 'tag-red' : 'tag-green'}" style="font-size: 9px; padding: 1px 4px; line-height: 1;">${group.type}</span>
-              <span style="color: var(--primary); font-weight: 700;">${routeNum}</span>
+              <span class="tag ${group.type === 'KMB' ? 'tag-red' : 'tag-green'}" style="font-size: 9px; padding: 2px 4px; line-height: 1; border-radius:4px;">${group.type}</span>
+              <span style="color: var(--primary); font-weight: 700; min-width: 35px;">${routeNum}</span>
               <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${destText}</span>
             </span>
-            <span class="tag ${tagClass}" style="font-size: 10px; padding: 1px 5px;">${timeStr}</span>
+            <span class="tag ${tagClass}" style="font-size: 11px; padding: 2px 6px; font-weight: 700; white-space: nowrap;">${timeStr}</span>
           </div>
         `);
       });
+    });
 
-      // 組合站點與內部的多條路線
+    // 4. 渲染內文並動態生成與 UI 變數（如 --border）相符的 HTML 結構
+    let finalHtml = '';
+    Object.entries(groupedHtmlMap).forEach(([groupName, routeHtmls]) => {
       finalHtml += `
-        <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
-          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">${group.groupName}</div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border, #eee);">
+          <div style="font-size: 11px; color: var(--text-faint, var(--text-muted)); font-weight: 600; margin-bottom: 4px;">${groupName}</div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
             ${routeHtmls.join('')}
           </div>
         </div>
@@ -784,11 +776,13 @@ async function renderMiniBusPreset() {
     });
 
     container.innerHTML = finalHtml;
-    if (syncTime) syncTime.textContent = new Date().toLocaleTimeString('zh-HK', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    if (syncTime) {
+      syncTime.textContent = new Date().toLocaleTimeString('zh-HK', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    }
 
   } catch (err) {
     console.error(err);
-    container.innerHTML = '<div style="color:var(--error); font-size:11px;">無法更新自訂站點數據</div>';
+    container.innerHTML = '<div style="color:var(--error); font-size:11px; padding: 8px 0;">無法更新自訂站點數據</div>';
   }
 }
 
