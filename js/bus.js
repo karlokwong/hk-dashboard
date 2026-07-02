@@ -283,7 +283,7 @@ async function search() {
 
       _activeIdx = 0;
       renderDirectionTabs();
-      renderStopSequence();
+//      renderStopSequence();
 
     } catch (err) {
       console.error(err);
