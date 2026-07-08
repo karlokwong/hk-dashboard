@@ -2,7 +2,7 @@
   "name": "香港城市儀表板",
   "short_name": "HK Dashboard",
   "description": "香港全方位實時城市數據：天氣、交通、巴士、泳灘、停車場",
-  "start_url": "/index.html",
+  "start_url": "/index.html#bus",
   "display": "standalone",
   "background_color": "#0d1b2e",
   "theme_color": "#0d1b2e",
